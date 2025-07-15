@@ -17,8 +17,8 @@ function Attendance() {
   const [selectedSubject, setSelectedSubject] = useState('');
   const [teacherList, setTeacherList] = useState([]);
   const [classes, setClasses] = useState([]);
+  const [attendanceRatings, setAttendanceRatings] = useState({}); 
 
-  // Fetch student's department name
   useEffect(() => {
     if (student?.department_id) {
       fetch(`http://127.0.0.1:8000/api/departments/${student.department_id}`)
@@ -28,7 +28,6 @@ function Attendance() {
     }
   }, [student]);
 
-  // Load all departments
   useEffect(() => {
     fetch('http://127.0.0.1:8000/api/departments')
       .then(res => res.json())
@@ -36,7 +35,6 @@ function Attendance() {
       .catch(err => console.error('Error loading departments:', err));
   }, []);
 
-  // Load subjects when department selected
   useEffect(() => {
     if (selectedDepartment) {
       fetch(`http://127.0.0.1:8000/api/departments/${selectedDepartment}/subjects`)
@@ -51,10 +49,8 @@ function Attendance() {
     }
   }, [selectedDepartment]);
 
-  // Fetch teachers and classes when department and subject selected
   useEffect(() => {
     if (selectedDepartment && selectedSubject) {
-      // Fetch teacher list
       fetch(`http://127.0.0.1:8000/api/teachers?department_id=${selectedDepartment}&subject_id=${selectedSubject}`)
         .then(res => res.json())
         .then(data => {
@@ -66,7 +62,6 @@ function Attendance() {
           setTeacherList([]);
         });
 
-      // Fetch classes list
       fetch(`http://127.0.0.1:8000/api/classes?department_id=${selectedDepartment}&subject_id=${selectedSubject}`)
         .then(res => res.json())
         .then(data => {
@@ -82,6 +77,56 @@ function Attendance() {
       setClasses([]);
     }
   }, [selectedDepartment, selectedSubject]);
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const classesToday = classes.filter(cls => cls.date === today);
+
+  const handleRatingChange = (classId, rating) => {
+    setAttendanceRatings(prev => ({ ...prev, [classId]: rating }));
+  };
+
+  const handleSubmitRating = (cls) => {
+    const rating = attendanceRatings[cls.id];
+    if (!rating || rating < 1 || rating > 5) {
+      alert('Please select a rating between 1 and 5.');
+      return;
+    }
+
+    // Prepare data payload
+    const payload = {
+      student_id: student.student_number,  // or whatever ID you use
+      department_id: selectedDepartment,
+      subject_id: selectedSubject,
+      teacher_id: cls.teacher.teacher_id,
+      class_id: cls.id,
+      rating: Number(rating),
+      date: today,
+    };
+
+    fetch('http://127.0.0.1:8000/api/submit_attendance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to submit attendance');
+        return res.json();
+      })
+      .then(data => {
+        alert('Attendance rating submitted successfully!');
+        // Optionally clear the rating input for that class
+        setAttendanceRatings(prev => {
+          const copy = {...prev};
+          delete copy[cls.id];
+          return copy;
+        });
+      })
+      .catch(err => {
+        console.error('Error submitting attendance:', err);
+        alert('Error submitting attendance rating.');
+      });
+  };
 
   const handleLogout = () => navigate('/');
 
@@ -100,7 +145,6 @@ function Attendance() {
       <div className="flex-grow-1 ms-5 ps-4 pe-4">
         <div className="container my-5">
 
-          {/* Student Profile */}
           {activeSection === 'profile' && (
             <div className="card shadow rounded-4 border-0 w-100" style={{ maxWidth: 600 }}>
               <div className="card-header bg-info text-white rounded-top-4 py-3 d-flex align-items-center">
@@ -123,14 +167,12 @@ function Attendance() {
             </div>
           )}
 
-          {/* Attendance Section */}
           {activeSection === 'attendance' && (
             <div className="card shadow-sm rounded-4 border-0 w-100">
               <div className="card-header bg-primary text-white rounded-top-4 py-3">
                 <h4 className="mb-0">View Subject, Teacher & Classes Details</h4>
               </div>
               <div className="card-body">
-                {/* Department */}
                 <div className="mb-4">
                   <label className="form-label fw-bold">Select Department</label>
                   <select
@@ -145,7 +187,6 @@ function Attendance() {
                   </select>
                 </div>
 
-                {/* Subject */}
                 {subjects.length > 0 && (
                   <div className="mb-4">
                     <label className="form-label fw-bold">Select Subject</label>
@@ -162,7 +203,6 @@ function Attendance() {
                   </div>
                 )}
 
-                {/* Teacher List (display once) */}
                 {teacherList.length > 0 ? (
                   <div className="mt-4">
                     <h5 className="fw-bold mb-3">Teacher Details</h5>
@@ -180,7 +220,6 @@ function Attendance() {
                   <p className="text-warning mt-3">No teacher assigned to this subject.</p>
                 ) : null}
 
-                {/* Classes List (no repeated teacher info except name) */}
                 {classes.length > 0 ? (
                   <div className="mt-4">
                     <h5 className="fw-bold mb-3">Classes Details</h5>
@@ -200,10 +239,95 @@ function Attendance() {
                 ) : selectedSubject ? (
                   <p className="text-warning mt-3">No classes found for this subject.</p>
                 ) : null}
+              
+
               </div>
             </div>
           )}
 
+
+          {activeSection === 'SubmitAttendance' && (
+            <div className="card shadow-sm rounded-4 border-0 w-100">
+              <div className="card-header bg-primary text-white rounded-top-4 py-3">
+                <h4 className="mb-0">Today Classes Details & Attendance Marks</h4>
+              </div>
+              <div className="card-body">
+                <div className="mb-4">
+                  <label className="form-label fw-bold">Select Department</label>
+                  <select
+                    className="form-select"
+                    value={selectedDepartment}
+                    onChange={(e) => setSelectedDepartment(e.target.value)}
+                  >
+                    <option value="">-- Select Department --</option>
+                    {departments.map(dept => (
+                      <option key={dept.id} value={dept.id}>{dept.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {subjects.length > 0 && (
+                  <div className="mb-4">
+                    <label className="form-label fw-bold">Select Subject</label>
+                    <select
+                      className="form-select"
+                      value={selectedSubject}
+                      onChange={(e) => setSelectedSubject(e.target.value)}
+                    >
+                      <option value="">-- Select Subject --</option>
+                      {subjects.map(subj => (
+                        <option key={subj.id} value={subj.id}>{subj.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {classesToday.length > 0 && (
+                  <div className="mt-5">
+                    <h4>Submit Attendance for Today's Class(es)</h4>
+                    {classesToday.map(cls => (
+                      <div key={cls.id} className="card mb-3 border-primary shadow-sm">
+                        <div className="card-body">
+                          <p><strong>Class:</strong> {cls.class_name} ({cls.week})</p>
+                          <p><strong>Time:</strong> {cls.start_time} - {cls.end_time}</p>
+                          <p><strong>Hall:</strong> {cls.hall_number}</p>
+                          <p><strong>Teacher:</strong> {cls.teacher.teacher_name}</p>
+
+                          <div className="mt-3">
+                            <label htmlFor={`rating-${cls.id}`} className="form-label fw-bold">
+                              Rate the class (1-5):
+                            </label>
+                            <select
+                              id={`rating-${cls.id}`}
+                              className="form-select w-auto d-inline-block"
+                              value={attendanceRatings[cls.id] || ''}
+                              onChange={(e) => handleRatingChange(cls.id, e.target.value)}
+                            >
+                              <option value="">Select rating</option>
+                              {[1,2,3,4,5].map(num => (
+                                <option key={num} value={num}>{num}</option>
+                              ))}
+                            </select>
+                            <button
+                              className="btn btn-success ms-3"
+                              onClick={() => handleSubmitRating(cls)}
+                            >
+                              Submit Attendance
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {selectedSubject && classesToday.length === 0 && (
+                  <p className="text-info mt-4">No classes scheduled for today to submit attendance.</p>
+                )}
+
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
