@@ -116,19 +116,20 @@ function TeacherDashboard() {
                     </div>
 
                     <div className="mt-3">
-                      <h5>Absent Students:</h5>
-                      {absentStudents.length > 0 ? (
-                        <ul className="list-group">
-                          {absentStudents.map(student => (
-                            <li key={student.student_number} className="list-group-item">
-                              {student.full_name} ({student.student_number})
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>No absent students found.</p>
-                      )}
-                    </div>
+                       <strong>Absent Students: {absentStudents.length}</strong>
+                        {absentStudents.length > 0 ? (
+                       <ul className="list-group mt-2">
+                       {absentStudents.map(student => (
+                       <li key={student.student_number} className="list-group-item">
+                       {student.full_name} ({student.student_number})
+                       </li>
+                       ))}
+                          </ul>
+                       ) : (
+                       <p>No absent students found.</p>
+                    )}
+                 </div>
+
                   </>
                 )}
               </div>
