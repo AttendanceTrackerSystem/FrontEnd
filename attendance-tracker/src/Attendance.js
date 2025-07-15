@@ -10,15 +10,21 @@ function Attendance() {
 
   const [activeSection, setActiveSection] = useState('profile');
   const [departmentName, setDepartmentName] = useState('');
-
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState('');
   const [teacherList, setTeacherList] = useState([]);
   const [classes, setClasses] = useState([]);
-  const [attendanceRatings, setAttendanceRatings] = useState({}); 
 
+  // Comments and ratings per class
+  const [attendanceComments, setAttendanceComments] = useState({});
+  const [attendanceRatings, setAttendanceRatings] = useState({});
+
+  const today = new Date().toISOString().split('T')[0];
+  const classesToday = classes.filter(cls => cls.date === today);
+
+  // Fetch department name of logged-in student
   useEffect(() => {
     if (student?.department_id) {
       fetch(`http://127.0.0.1:8000/api/departments/${student.department_id}`)
@@ -28,6 +34,7 @@ function Attendance() {
     }
   }, [student]);
 
+  // Load departments
   useEffect(() => {
     fetch('http://127.0.0.1:8000/api/departments')
       .then(res => res.json())
@@ -35,6 +42,7 @@ function Attendance() {
       .catch(err => console.error('Error loading departments:', err));
   }, []);
 
+  // Load subjects by department
   useEffect(() => {
     if (selectedDepartment) {
       fetch(`http://127.0.0.1:8000/api/departments/${selectedDepartment}/subjects`)
@@ -49,60 +57,69 @@ function Attendance() {
     }
   }, [selectedDepartment]);
 
+  // Load teachers and classes by department and subject
   useEffect(() => {
     if (selectedDepartment && selectedSubject) {
       fetch(`http://127.0.0.1:8000/api/teachers?department_id=${selectedDepartment}&subject_id=${selectedSubject}`)
         .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) setTeacherList(data);
-          else setTeacherList([]);
-        })
-        .catch(err => {
-          console.error('Error fetching teacher details:', err);
-          setTeacherList([]);
-        });
+        .then(data => setTeacherList(Array.isArray(data) ? data : []))
+        .catch(() => setTeacherList([]));
 
       fetch(`http://127.0.0.1:8000/api/classes?department_id=${selectedDepartment}&subject_id=${selectedSubject}`)
         .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) setClasses(data);
-          else setClasses([]);
-        })
-        .catch(err => {
-          console.error('Error fetching classes:', err);
-          setClasses([]);
-        });
+        .then(data => setClasses(Array.isArray(data) ? data : []))
+        .catch(() => setClasses([]));
     } else {
       setTeacherList([]);
       setClasses([]);
     }
   }, [selectedDepartment, selectedSubject]);
 
-  const today = new Date().toISOString().split('T')[0];
-
-  const classesToday = classes.filter(cls => cls.date === today);
-
-  const handleRatingChange = (classId, rating) => {
-    setAttendanceRatings(prev => ({ ...prev, [classId]: rating }));
+  // Handle comment input change
+  const handleCommentChange = (classId, comment) => {
+    setAttendanceComments(prev => ({ ...prev, [classId]: comment }));
   };
 
-  const handleSubmitRating = (cls) => {
+  // Handle rating input change (allow only 1-5 or empty)
+  const handleRatingChange = (classId, rating) => {
+    if (rating === '' || (Number(rating) >= 1 && Number(rating) <= 5)) {
+      setAttendanceRatings(prev => ({ ...prev, [classId]: rating }));
+    }
+  };
+
+  // Submit attendance (comment + rating)
+  const handleSubmitComment = (cls) => {
+    const comment = attendanceComments[cls.id];
     const rating = attendanceRatings[cls.id];
-    if (!rating || rating < 1 || rating > 5) {
-      alert('Please select a rating between 1 and 5.');
+    const studentId = student?.student_number;
+
+    if (!studentId) {
+      alert('Student ID is missing! Please login again.');
+      console.error('Student ID is undefined:', student);
       return;
     }
 
-    // Prepare data payload
+    if (!rating || rating < 1 || rating > 5) {
+      alert('Please enter a valid rating (1-5).');
+      return;
+    }
+
+    if (!comment || comment.trim() === '') {
+      alert('Please enter a comment before submitting.');
+      return;
+    }
+
     const payload = {
-      student_id: student.student_number,  // or whatever ID you use
-      department_id: selectedDepartment,
-      subject_id: selectedSubject,
-      teacher_id: cls.teacher.teacher_id,
-      class_id: cls.id,
-      rating: Number(rating),
-      date: today,
-    };
+  student_id: student.student_number,  // <-- important!
+  class_id: cls.id,
+  comment: comment.trim(),
+  rating: parseInt(rating),
+  date: today,
+};
+
+
+
+    console.log('Submitting attendance with payload:', payload);
 
     fetch('http://127.0.0.1:8000/api/submit_attendance', {
       method: 'POST',
@@ -110,32 +127,35 @@ function Attendance() {
       body: JSON.stringify(payload),
     })
       .then(res => {
-        if (!res.ok) throw new Error('Failed to submit attendance');
+        if (!res.ok) {
+          console.error('Server responded with status:', res.status);
+          throw new Error('Failed to submit attendance');
+        }
         return res.json();
       })
-      .then(data => {
-        alert('Attendance rating submitted successfully!');
-        // Optionally clear the rating input for that class
+      .then(() => {
+        alert('Attendance submitted successfully!');
+        setAttendanceComments(prev => {
+          const updated = { ...prev };
+          delete updated[cls.id];
+          return updated;
+        });
         setAttendanceRatings(prev => {
-          const copy = {...prev};
-          delete copy[cls.id];
-          return copy;
+          const updated = { ...prev };
+          delete updated[cls.id];
+          return updated;
         });
       })
       .catch(err => {
         console.error('Error submitting attendance:', err);
-        alert('Error submitting attendance rating.');
+        alert('Error submitting attendance. Check console for details.');
       });
   };
 
   const handleLogout = () => navigate('/');
 
   if (!student) {
-    return (
-      <div className="alert alert-danger m-3">
-        No student data found. Please login again.
-      </div>
-    );
+    return <div className="alert alert-danger m-3">No student data found. Please login again.</div>;
   }
 
   return (
@@ -203,7 +223,7 @@ function Attendance() {
                   </div>
                 )}
 
-                {teacherList.length > 0 ? (
+                {teacherList.length > 0 && (
                   <div className="mt-4">
                     <h5 className="fw-bold mb-3">Teacher Details</h5>
                     {teacherList.map((teacher) => (
@@ -216,11 +236,9 @@ function Attendance() {
                       </div>
                     ))}
                   </div>
-                ) : selectedSubject ? (
-                  <p className="text-warning mt-3">No teacher assigned to this subject.</p>
-                ) : null}
+                )}
 
-                {classes.length > 0 ? (
+                {classes.length > 0 && (
                   <div className="mt-4">
                     <h5 className="fw-bold mb-3">Classes Details</h5>
                     {classes.map(cls => (
@@ -236,22 +254,18 @@ function Attendance() {
                       </div>
                     ))}
                   </div>
-                ) : selectedSubject ? (
-                  <p className="text-warning mt-3">No classes found for this subject.</p>
-                ) : null}
-              
-
+                )}
               </div>
             </div>
           )}
 
-
           {activeSection === 'SubmitAttendance' && (
             <div className="card shadow-sm rounded-4 border-0 w-100">
-              <div className="card-header bg-primary text-white rounded-top-4 py-3">
-                <h4 className="mb-0">Today Classes Details & Attendance Marks</h4>
+              <div className="card-header bg-secondary text-white rounded-top-4 py-3">
+                <h4 className="mb-0">Today Classes Details & Attendance Submission</h4>
               </div>
               <div className="card-body">
+                {/* Department Selection */}
                 <div className="mb-4">
                   <label className="form-label fw-bold">Select Department</label>
                   <select
@@ -266,6 +280,7 @@ function Attendance() {
                   </select>
                 </div>
 
+                {/* Subject Selection */}
                 {subjects.length > 0 && (
                   <div className="mb-4">
                     <label className="form-label fw-bold">Select Subject</label>
@@ -282,52 +297,61 @@ function Attendance() {
                   </div>
                 )}
 
-                {classesToday.length > 0 && (
-                  <div className="mt-5">
-                    <h4>Submit Attendance for Today's Class(es)</h4>
+                {/* Classes Today */}
+                {classesToday.length > 0 ? (
+                  <div className="mt-4">
+                    <h4>Submit Attendance & Comment for Today's Classes</h4>
                     {classesToday.map(cls => (
-                      <div key={cls.id} className="card mb-3 border-primary shadow-sm">
+                      <div key={cls.id} className="card mb-3 shadow-sm border-primary">
                         <div className="card-body">
                           <p><strong>Class:</strong> {cls.class_name} ({cls.week})</p>
                           <p><strong>Time:</strong> {cls.start_time} - {cls.end_time}</p>
-                          <p><strong>Hall:</strong> {cls.hall_number}</p>
                           <p><strong>Teacher:</strong> {cls.teacher.teacher_name}</p>
 
-                          <div className="mt-3">
-                            <label htmlFor={`rating-${cls.id}`} className="form-label fw-bold">
-                              Rate the class (1-5):
-                            </label>
-                            <select
-                              id={`rating-${cls.id}`}
-                              className="form-select w-auto d-inline-block"
+                          {/* Rating Input */}
+                          <div className="mb-3">
+                            <label className="form-label fw-bold">Attendance Rating (1 - 5)</label>
+                            <input
+                              type="number"
+                              className="form-control"
+                              min="1"
+                              max="5"
+                              placeholder="Enter rating"
                               value={attendanceRatings[cls.id] || ''}
                               onChange={(e) => handleRatingChange(cls.id, e.target.value)}
-                            >
-                              <option value="">Select rating</option>
-                              {[1,2,3,4,5].map(num => (
-                                <option key={num} value={num}>{num}</option>
-                              ))}
-                            </select>
-                            <button
-                              className="btn btn-success ms-3"
-                              onClick={() => handleSubmitRating(cls)}
-                            >
-                              Submit Attendance
-                            </button>
+                            />
                           </div>
+
+                          {/* Comment Input */}
+                          <div className="mb-3">
+                            <label className="form-label fw-bold">Your Comment</label>
+                            <textarea
+                              className="form-control"
+                              rows="3"
+                              placeholder="Write your feedback or thoughts..."
+                              value={attendanceComments[cls.id] || ''}
+                              onChange={(e) => handleCommentChange(cls.id, e.target.value)}
+                            />
+                          </div>
+
+                          {/* Submit Button */}
+                          <button
+                            className="btn btn-success"
+                            onClick={() => handleSubmitComment(cls)}
+                          >
+                            Submit Attendance
+                          </button>
                         </div>
                       </div>
                     ))}
                   </div>
+                ) : (
+                  selectedSubject && <p className="text-info">No classes scheduled today to submit attendance.</p>
                 )}
-
-                {selectedSubject && classesToday.length === 0 && (
-                  <p className="text-info mt-4">No classes scheduled for today to submit attendance.</p>
-                )}
-
               </div>
             </div>
           )}
+
         </div>
       </div>
     </div>
