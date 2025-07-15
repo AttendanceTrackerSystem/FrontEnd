@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // for navigation
 import './css/LoginPage.css';
 
 function TeacherLogin() {
@@ -6,19 +7,49 @@ function TeacherLogin() {
     teacherId: '',
     password: ''
   });
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert(`Logging in as: ${form.teacherId}`);
+
+    if (!form.teacherId || !form.password) {
+      setError('Please fill in all fields.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/logintech', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teacher_id: form.teacherId,
+          password: form.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Login failed');
+      } else {
+        // On successful login, redirect to TeacherDashboard
+        navigate('/teacherdashboard', { state: { teacher: data.teacher } });
+      }
+    } catch (err) {
+      setError('Server error: ' + err.message);
+    }
   };
 
   return (
     <div className="login-container" role="main" aria-label="Teacher login form">
       <h2>Teacher Login</h2>
+      {error && <div className="alert alert-danger">{error}</div>}
       <form onSubmit={handleSubmit} noValidate>
         <label htmlFor="teacherId">Teacher ID</label>
         <input
@@ -29,7 +60,7 @@ function TeacherLogin() {
           value={form.teacherId}
           onChange={handleChange}
           required
-          autoComplete="teacherId"
+          autoComplete="username"
         />
         <label htmlFor="password">Password</label>
         <input

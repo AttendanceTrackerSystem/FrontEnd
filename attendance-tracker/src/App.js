@@ -7,7 +7,7 @@ import TeacherLogin from './TeacherLogin';
 import AboutUs from './AboutUs'
 import ContactUs from './ContactUs';
 import Attendance from './Attendance';
-
+import TeacherDashboard from './TeacherDashboard';
 
 function App() {
   return (
@@ -19,9 +19,12 @@ function App() {
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/contact-us" element={<ContactUs />} />
          <Route path="/attendance" element={<Attendance />} />
+                 <Route path="/teacherdashboard" element={<TeacherDashboard />} />
+
       </Routes>
     </Router>
   );
 }
 
 export default App;
+

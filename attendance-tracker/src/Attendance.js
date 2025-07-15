@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -15,17 +15,6 @@ function Attendance() {
     { id: 3, name: 'English', attendance: '' },
   ]);
   const [message, setMessage] = useState('');
-
-  const [departments, setDepartments] = useState([]);
-  const [deptSubjects, setDeptSubjects] = useState([]);
-  const [selectedDept, setSelectedDept] = useState('');
-
-  useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/departments')
-      .then((res) => res.json())
-      .then((data) => setDepartments(data))
-      .catch((err) => console.error('Failed to fetch departments', err));
-  }, []);
 
   const handleAttendanceChange = (subjectId, value) => {
     setSubjects((prev) =>
@@ -69,7 +58,8 @@ function Attendance() {
   };
 
   const handleLogout = () => {
-    navigate('/');
+    // Clear auth or session storage if needed
+    navigate('/'); // redirect to dashboard/home
   };
 
   if (!student) {
@@ -98,7 +88,7 @@ function Attendance() {
                   <li className="mb-3"><strong>Email:</strong> {student.email}</li>
                   <li className="mb-3"><strong>Department ID:</strong> {student.dept_id}</li>
                   <li className="mb-3"><strong>Department:</strong> {student.department || 'N/A'}</li>
-                </ul>
+                  </ul>
               </div>
             </div>
           )}
@@ -154,52 +144,9 @@ function Attendance() {
           )}
 
           {activeSection === 'classes' && (
-            <div className="card shadow-sm rounded-4 border-0 w-100">
-              <div className="card-header bg-secondary text-white rounded-top-4 py-3">
-                <h4 className="mb-0">View Classes by Department</h4>
-              </div>
-              <div className="card-body">
-                <div className="mb-4">
-                  <label className="form-label fw-semibold">Select Department</label>
-                  <select
-                    className="form-select"
-                    onChange={async (e) => {
-                      const deptId = e.target.value;
-                      setSelectedDept(deptId);
-                      if (deptId) {
-                        try {
-                          const res = await fetch(`http://127.0.0.1:8000/api/departments/${deptId}/subjects`);
-                          const data = await res.json();
-                          setDeptSubjects(data);
-                        } catch (err) {
-                          console.error('Error fetching subjects:', err);
-                        }
-                      } else {
-                        setDeptSubjects([]);
-                      }
-                    }}
-                  >
-                    <option value="">-- Select Department --</option>
-                    {departments.map((dept) => (
-                      <option key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {deptSubjects.length > 0 ? (
-                  <ul className="list-group">
-                    {deptSubjects.map((subj) => (
-                      <li key={subj.id} className="list-group-item">
-                        {subj.name}
-                      </li>
-                    ))}
-                  </ul>
-                ) : selectedDept ? (
-                  <p className="text-muted">No subjects found for this department.</p>
-                ) : null}
-              </div>
+            <div>
+              <h4>Classes</h4>
+              <p>List of classes goes here.</p>
             </div>
           )}
 
