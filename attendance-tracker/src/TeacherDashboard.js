@@ -129,6 +129,13 @@ function TeacherDashboard() {
                        <p>No absent students found.</p>
                     )}
                  </div>
+                 <div>
+  <strong>Attendance Percentage:</strong>{' '}
+  {(attendanceCount + absentStudents.length) > 0
+    ? ((attendanceCount / (attendanceCount + absentStudents.length)) * 100).toFixed(2) + '%'
+    : 'N/A'}
+</div>
+
 
                   </>
                 )}
