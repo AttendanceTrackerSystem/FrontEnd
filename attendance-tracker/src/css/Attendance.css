@@ -1,0 +1,74 @@
+.attendance-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.attendance-layout {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  justify-content: space-between;
+  /* Optional: limit max width */
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Left side: Attendance form */
+.attendance-form-section {
+  flex: 2; /* take more space */
+}
+
+/* Right side: Student details */
+.student-details-section {
+  flex: 1; /* smaller width */
+  background-color: #f5f8fa;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+}
+
+.student-details-section h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.student-details-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.student-details-section li {
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #555;
+}
+
+.message {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.message.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.submit-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background-color: #0056b3;
+}

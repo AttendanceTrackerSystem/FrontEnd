@@ -1,0 +1,132 @@
+/* LoginPage.css */
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background-image: url('https://cdn.creazilla.com/digital-illustrations/1719878/background-blue-background-blue-design-illustration-xl.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.login-container h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1.25rem;
+  font-weight: 700;
+}
+
+form {
+  background-color: rgba(0, 0, 0, 0.55);
+  padding: 2rem 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+  user-select: none;
+}
+
+/* Shared input styles */
+input {
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.2rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  outline: none;
+  transition: box-shadow 0.3s ease;
+}
+
+/* Student Number input distinct style */
+input.student-number {
+  background-color: #eef6ff;
+  border: 2px solid #3b82f6;
+  color: #1e40af;
+}
+
+input.student-number:focus {
+  box-shadow: 0 0 8px 3px #60a5fa;
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* Teacher ID input distinct style */
+input.teacher-id {
+  background-color: #fff7ed;
+  border: 2px solid #f59e0b;
+  color: #b45309;
+}
+
+input.teacher-id:focus {
+  box-shadow: 0 0 8px 3px #fbbf24;
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.forgot {
+  font-size: 0.9rem;
+  color: #a5c9ff;
+  cursor: pointer;
+  margin-bottom: 1.8rem;
+  user-select: none;
+  outline: none;
+}
+
+.forgot:focus,
+.forgot:hover {
+  color: #dbeafe;
+  text-decoration: underline;
+}
+
+.login-button {
+  background-color: #3b82f6;
+  border: none;
+  color: white;
+  padding: 0.85rem;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: background-color 0.3s ease;
+  user-select: none;
+}
+
+.login-button:hover,
+.login-button:focus {
+  background-color: #2563eb;
+  outline: none;
+}
+
+@media (max-width: 480px) {
+  .login-container h2 {
+    font-size: 2rem;
+  }
+
+  form {
+    padding: 1.5rem 2rem;
+  }
+}
+
+
+
+.error-message {
+  background: #f8d7da;
+  color: #842029;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
