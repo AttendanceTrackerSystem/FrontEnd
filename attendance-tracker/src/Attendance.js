@@ -16,6 +16,7 @@ function Attendance() {
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState('');
   const [teacherList, setTeacherList] = useState([]);
+  const [classes, setClasses] = useState([]);
 
   // Fetch student's department name
   useEffect(() => {
@@ -46,27 +47,39 @@ function Attendance() {
       setSubjects([]);
       setSelectedSubject('');
       setTeacherList([]);
+      setClasses([]);
     }
   }, [selectedDepartment]);
 
-  // Fetch teachers when department and subject selected
+  // Fetch teachers and classes when department and subject selected
   useEffect(() => {
     if (selectedDepartment && selectedSubject) {
+      // Fetch teacher list
       fetch(`http://127.0.0.1:8000/api/teachers?department_id=${selectedDepartment}&subject_id=${selectedSubject}`)
         .then(res => res.json())
         .then(data => {
-          if (Array.isArray(data)) {
-            setTeacherList(data);
-          } else {
-            setTeacherList([]);
-          }
+          if (Array.isArray(data)) setTeacherList(data);
+          else setTeacherList([]);
         })
         .catch(err => {
           console.error('Error fetching teacher details:', err);
           setTeacherList([]);
         });
+
+      // Fetch classes list
+      fetch(`http://127.0.0.1:8000/api/classes?department_id=${selectedDepartment}&subject_id=${selectedSubject}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) setClasses(data);
+          else setClasses([]);
+        })
+        .catch(err => {
+          console.error('Error fetching classes:', err);
+          setClasses([]);
+        });
     } else {
       setTeacherList([]);
+      setClasses([]);
     }
   }, [selectedDepartment, selectedSubject]);
 
@@ -114,7 +127,7 @@ function Attendance() {
           {activeSection === 'attendance' && (
             <div className="card shadow-sm rounded-4 border-0 w-100">
               <div className="card-header bg-primary text-white rounded-top-4 py-3">
-                <h4 className="mb-0">View Subject & Teacher Details</h4>
+                <h4 className="mb-0">View Subject, Teacher & Classes Details</h4>
               </div>
               <div className="card-body">
                 {/* Department */}
@@ -149,7 +162,7 @@ function Attendance() {
                   </div>
                 )}
 
-                {/* Teacher List */}
+                {/* Teacher List (display once) */}
                 {teacherList.length > 0 ? (
                   <div className="mt-4">
                     <h5 className="fw-bold mb-3">Teacher Details</h5>
@@ -165,6 +178,27 @@ function Attendance() {
                   </div>
                 ) : selectedSubject ? (
                   <p className="text-warning mt-3">No teacher assigned to this subject.</p>
+                ) : null}
+
+                {/* Classes List (no repeated teacher info except name) */}
+                {classes.length > 0 ? (
+                  <div className="mt-4">
+                    <h5 className="fw-bold mb-3">Classes Details</h5>
+                    {classes.map(cls => (
+                      <div key={cls.id} className="card mb-3 shadow-sm">
+                        <div className="card-body">
+                          <p><strong>Class Name:</strong> {cls.class_name} ({cls.week})</p>
+                          <p><strong>Date:</strong> {cls.date} ({cls.day})</p>
+                          <p><strong>Time:</strong> {cls.start_time} - {cls.end_time}</p>
+                          <p><strong>Hall:</strong> {cls.hall_number}</p>
+                          <p><strong>Description:</strong> {cls.description}</p>
+                          <p><strong>Teacher:</strong> {cls.teacher.teacher_name}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : selectedSubject ? (
+                  <p className="text-warning mt-3">No classes found for this subject.</p>
                 ) : null}
               </div>
             </div>

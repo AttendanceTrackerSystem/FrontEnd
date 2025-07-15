@@ -6,7 +6,6 @@ function Sidebar({ activeSection, onChangeSection, onLogout }) {
   const menuItems = [
     { key: 'profile', label: 'Profile', icon: 'bi-person-fill' },
     { key: 'attendance', label: 'Mark Attendance', icon: 'bi-check2-square' },
-    { key: 'classes', label: 'View Classes', icon: 'bi-easel' },
     { key: 'myAttendance', label: 'My Attendance', icon: 'bi-clipboard-data' },
   ];
 
