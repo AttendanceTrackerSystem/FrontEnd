@@ -1,5 +1,5 @@
 import React from 'react';
-import '../css/Sidebar.css'; // Your sidebar styles
+import '../css/Sidebar.css'; 
 
 function Sidebar({ activeSection, onChangeSection, onLogout }) {
   const menuItems = [

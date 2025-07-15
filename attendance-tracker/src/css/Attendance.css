@@ -8,19 +8,15 @@
   gap: 40px;
   align-items: flex-start;
   justify-content: space-between;
-  /* Optional: limit max width */
   max-width: 1000px;
   margin: 0 auto;
 }
 
-/* Left side: Attendance form */
 .attendance-form-section {
-  flex: 2; /* take more space */
+  flex: 2; 
 }
-
-/* Right side: Student details */
 .student-details-section {
-  flex: 1; /* smaller width */
+  flex: 1;
   background-color: #f5f8fa;
   border-radius: 8px;
   padding: 20px;

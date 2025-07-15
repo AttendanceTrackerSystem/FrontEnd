@@ -17,14 +17,12 @@ function Attendance() {
   const [teacherList, setTeacherList] = useState([]);
   const [classes, setClasses] = useState([]);
 
-  // Comments and ratings per class
   const [attendanceComments, setAttendanceComments] = useState({});
   const [attendanceRatings, setAttendanceRatings] = useState({});
 
   const today = new Date().toISOString().split('T')[0];
   const classesToday = classes.filter(cls => cls.date === today);
 
-  // Fetch department name of logged-in student
   useEffect(() => {
     if (student?.department_id) {
       fetch(`http://127.0.0.1:8000/api/departments/${student.department_id}`)
@@ -34,7 +32,6 @@ function Attendance() {
     }
   }, [student]);
 
-  // Load departments
   useEffect(() => {
     fetch('http://127.0.0.1:8000/api/departments')
       .then(res => res.json())
@@ -42,7 +39,6 @@ function Attendance() {
       .catch(err => console.error('Error loading departments:', err));
   }, []);
 
-  // Load subjects by department
   useEffect(() => {
     if (selectedDepartment) {
       fetch(`http://127.0.0.1:8000/api/departments/${selectedDepartment}/subjects`)
@@ -57,7 +53,6 @@ function Attendance() {
     }
   }, [selectedDepartment]);
 
-  // Load teachers and classes by department and subject
   useEffect(() => {
     if (selectedDepartment && selectedSubject) {
       fetch(`http://127.0.0.1:8000/api/teachers?department_id=${selectedDepartment}&subject_id=${selectedSubject}`)
@@ -75,19 +70,16 @@ function Attendance() {
     }
   }, [selectedDepartment, selectedSubject]);
 
-  // Handle comment input change
   const handleCommentChange = (classId, comment) => {
     setAttendanceComments(prev => ({ ...prev, [classId]: comment }));
   };
 
-  // Handle rating input change (allow only 1-5 or empty)
   const handleRatingChange = (classId, rating) => {
     if (rating === '' || (Number(rating) >= 1 && Number(rating) <= 5)) {
       setAttendanceRatings(prev => ({ ...prev, [classId]: rating }));
     }
   };
 
-  // Submit attendance (comment + rating)
   const handleSubmitComment = (cls) => {
     const comment = attendanceComments[cls.id];
     const rating = attendanceRatings[cls.id];
@@ -110,7 +102,7 @@ function Attendance() {
     }
 
     const payload = {
-  student_id: student.student_number,  // <-- important!
+  student_id: student.student_number,  
   class_id: cls.id,
   comment: comment.trim(),
   rating: parseInt(rating),
@@ -265,7 +257,6 @@ function Attendance() {
                 <h4 className="mb-0">Today Classes Details & Attendance Submission</h4>
               </div>
               <div className="card-body">
-                {/* Department Selection */}
                 <div className="mb-4">
                   <label className="form-label fw-bold">Select Department</label>
                   <select
@@ -280,7 +271,6 @@ function Attendance() {
                   </select>
                 </div>
 
-                {/* Subject Selection */}
                 {subjects.length > 0 && (
                   <div className="mb-4">
                     <label className="form-label fw-bold">Select Subject</label>
@@ -297,7 +287,6 @@ function Attendance() {
                   </div>
                 )}
 
-                {/* Classes Today */}
                 {classesToday.length > 0 ? (
                   <div className="mt-4">
                     <h4>Submit Attendance & Comment for Today's Classes</h4>
@@ -308,7 +297,6 @@ function Attendance() {
                           <p><strong>Time:</strong> {cls.start_time} - {cls.end_time}</p>
                           <p><strong>Teacher:</strong> {cls.teacher.teacher_name}</p>
 
-                          {/* Rating Input */}
                           <div className="mb-3">
                             <label className="form-label fw-bold">Attendance Rating (1 - 5)</label>
                             <input
@@ -322,7 +310,6 @@ function Attendance() {
                             />
                           </div>
 
-                          {/* Comment Input */}
                           <div className="mb-3">
                             <label className="form-label fw-bold">Your Comment</label>
                             <textarea
@@ -334,7 +321,6 @@ function Attendance() {
                             />
                           </div>
 
-                          {/* Submit Button */}
                           <button
                             className="btn btn-success"
                             onClick={() => handleSubmitComment(cls)}
