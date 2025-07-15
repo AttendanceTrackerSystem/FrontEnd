@@ -1,33 +1,53 @@
-# 📚 Student Attendance System – Frontend
+# 🎓 Student Attendance Tracker – Frontend (React + JavaScript)
 
-This is the **React + Bootstrap frontend** for the University Student Attendance Tracker System. It allows teachers and admins to log in, view dashboards, mark attendance, and track student statistics.
-
----
 
 ## 🚀 Features
 
-- 🧑‍🏫 Teacher Login & Dashboard
-- 📅 Daily Attendance Marking
-- 📊 Attendance Summary with Charts
-- 🔍 Advanced Filters (Subject, Date Range, Class)
-- 🎓 Student Profiles and Attendance History
+- 📋 Mark daily attendance
+- 📈 View attendance summary
+- 📊 Pie chart visualizations
+- 🎯 Filter by date, class, subject
 - 🧭 Responsive UI with Bootstrap
 
----
+## 🛠 Tech Stack
 
-## 🛠️ Tech Stack
+- React.js
+- Bootstrap 5
+- Axios
+- React Router DOM
 
-- **React JS**
-- **Bootstrap 5**
-- **Axios** (for API calls)
-- **React Router DOM** (for navigation)
+## 🔧 Setup
 
----
-
-## 🔧 Setup Instructions
-
-1. **Clone the Repository**
-
+1. Clone the repository:
 ```bash
 git clone https://github.com/your-username/attendance-frontend.git
 cd attendance-frontend
+Install dependencies:
+
+bash
+Copy
+Edit
+npm install
+Configure API URL (in src/api.js or wherever Axios is configured):
+
+js
+Copy
+Edit
+const BASE_URL = "http://localhost:8000/api";
+Run the app:
+
+bash
+Copy
+Edit
+npm start
+The app will run on http://localhost:3000
+
+📁 Project Structure
+bash
+Copy
+Edit
+src/
+├── components/       # Navbar, Sidebar, Reusable UI
+├── pages/            # Attendance, Profile, Dashboard
+├── App.js            # Routing
+└── index.js          # Entry point
