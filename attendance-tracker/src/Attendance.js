@@ -2,6 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 function Attendance() {
   const location = useLocation();
@@ -22,6 +30,29 @@ function Attendance() {
 
   const today = new Date().toISOString().split('T')[0];
   const classesToday = classes.filter(cls => cls.date === today);
+  const [studentAttendance, setStudentAttendance] = useState([]);
+
+  const presentCount = studentAttendance.filter(a => a.is_present === 1).length;
+const absentCount = studentAttendance.filter(a => a.is_present === 0).length;
+
+const attendanceChartData = [
+  { name: 'Present', value: presentCount },
+  { name: 'Absent', value: absentCount },
+];
+
+const COLORS = ['#28a745', '#dc3545']; 
+
+useEffect(() => {
+  if (student?.student_number) {
+    fetch(`http://127.0.0.1:8000/api/student/${student.student_number}/attendance`)
+      .then(res => res.json())
+      .then(data => setStudentAttendance(data))
+      .catch(err => {
+        console.error('Error fetching attendance records:', err);
+        setStudentAttendance([]);
+      });
+  }
+}, [student]);
 
   useEffect(() => {
     if (student?.department_id) {
@@ -337,6 +368,83 @@ function Attendance() {
               </div>
             </div>
           )}
+
+
+{activeSection === 'ViewAttendance' && (
+  <div className="card shadow-sm rounded-4 border-0 w-100">
+    <div className="card-header bg-secondary text-white rounded-top-4 py-3">
+      <h4 className="mb-0">📅 My Attendance Records</h4>
+    </div>
+    <div className="card-body">
+
+      {studentAttendance.length === 0 ? (
+        <p className="text-muted">No attendance records found.</p>
+      ) : (
+        <>
+          <div className="table-responsive mb-5">
+            <table className="table table-striped table-hover">
+              <thead className="table-dark">
+                <tr>
+                  <th>#</th>
+                  <th>Date</th>
+                  <th>Class</th>
+                  <th>Teacher</th>
+                  <th>Present</th>
+                  <th>Rating</th>
+                  <th>Comment</th>
+                </tr>
+              </thead>
+              <tbody>
+                {studentAttendance.map((record, index) => (
+                  <tr key={record.id}>
+                    <td>{index + 1}</td>
+                    <td>{record.date}</td>
+                    <td>{record.class?.class_name || 'N/A'}</td>
+                    <td>{record.class?.teacher?.teacher_name || 'N/A'}</td>
+                    <td>
+                      {record.is_present ? (
+                        <span className="badge bg-success">Present</span>
+                      ) : (
+                        <span className="badge bg-danger">Absent</span>
+                      )}
+                    </td>
+                    <td>{record.rating || '-'}</td>
+                    <td>{record.comment}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <h5 className="mb-3">📊 Attendance Summary</h5>
+          <div style={{ width: '100%', maxWidth: 500, height: 300 }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={attendanceChartData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={90}
+                  fill="#8884d8"
+                  label
+                >
+                  {attendanceChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+)}
+
 
         </div>
       </div>

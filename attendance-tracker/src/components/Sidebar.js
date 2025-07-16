@@ -6,6 +6,7 @@ function Sidebar({ activeSection, onChangeSection, onLogout }) {
     { key: 'profile', label: 'Profile', icon: 'bi-person-fill' },
     { key: 'attendance', label: 'Mark Attendance', icon: 'bi-check2-square' },
     { key: 'SubmitAttendance', label: "Submit Attendance", icon: 'bi-clipboard-data' },
+    { key: 'ViewAttendance', label: "View Attendance", icon: 'bi-clipboard-data' },
   ];
 
   return (
