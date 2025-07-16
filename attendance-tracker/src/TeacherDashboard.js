@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useLocation } from 'react-router-dom';
+import { useLocation,useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend
+} from 'recharts';
+
 
 function TeacherDashboard() {
   const location = useLocation();
@@ -10,13 +15,12 @@ function TeacherDashboard() {
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
-
   const [attendanceCount, setAttendanceCount] = useState(0);
   const [absentStudents, setAbsentStudents] = useState([]);
   const [presentStudents, setPresentStudents] = useState([]);
   const [showPresentList, setShowPresentList] = useState(false);
-
   const [activeSection, setActiveSection] = useState('dashboard');
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (teacher?.teacher_id) {
@@ -56,7 +60,6 @@ function TeacherDashboard() {
         const presentList = res.data.map(student => ({
           student_number: student.student_id
         }));
-
         setPresentStudents(presentList);
         setShowPresentList(true);
       })
@@ -68,8 +71,21 @@ function TeacherDashboard() {
   };
 
   const handleLogout = () => {
-    alert('Logout clicked');
-  };
+  navigate('/'); 
+};
+
+
+  const totalStudents = attendanceCount + absentStudents.length;
+  const attendancePercentage = totalStudents > 0
+    ? ((attendanceCount / totalStudents) * 100).toFixed(2)
+    : 'N/A';
+
+  const chartData = [
+    { name: 'Present', count: attendanceCount },
+    { name: 'Absent', count: absentStudents.length },
+  ];
+
+  const pieColors = ['#198754', '#dc3545']; // Green, Red
 
   if (!teacher) {
     return (
@@ -81,6 +97,7 @@ function TeacherDashboard() {
 
   return (
     <div className="d-flex" style={{ minHeight: '100vh' }}>
+      {/* Sidebar */}
       <nav className="d-flex flex-column flex-shrink-0 p-3 bg-light" style={{ width: '220px' }}>
         <span className="fs-4 fw-bold mb-4">Teacher Panel</span>
         <ul className="nav nav-pills flex-column mb-auto">
@@ -108,14 +125,16 @@ function TeacherDashboard() {
         </ul>
       </nav>
 
+      {/* Main Content */}
       <main className="flex-grow-1 p-4">
         {activeSection === 'dashboard' && (
           <>
             <h2>Welcome, {teacher.teacher_name}!</h2>
 
-            <div className="card mt-4" style={{ maxWidth: '600px' }}>
+            <div className="card mt-4" style={{ maxWidth: '900px' }}>
               <div className="card-header bg-primary text-white">Mark Attendance</div>
               <div className="card-body">
+                {/* Selectors */}
                 <div className="mb-3">
                   <label htmlFor="classSelect" className="form-label">Select Class</label>
                   <select
@@ -145,9 +164,7 @@ function TeacherDashboard() {
                   />
                 </div>
 
-                <div>
-                  <strong>Students Present:</strong> {attendanceCount}
-                </div>
+                <div className="mb-2"><strong>Students Present:</strong> {attendanceCount}</div>
 
                 <div className="mt-3">
                   <h5>Absent Students:</h5>
@@ -165,12 +182,53 @@ function TeacherDashboard() {
                 </div>
 
                 <div className="mt-3">
-                  <strong>Attendance Percentage:</strong>{' '}
-                  {(attendanceCount + absentStudents.length) > 0
-                    ? ((attendanceCount / (attendanceCount + absentStudents.length)) * 100).toFixed(2) + '%'
-                    : 'N/A'}
+                  <strong>Attendance Percentage:</strong> {attendancePercentage}%
                 </div>
 
+                {/* Charts */}
+                {totalStudents > 0 && (
+                  <div className="mt-4 d-flex flex-wrap justify-content-between gap-4">
+                    {/* Bar Chart */}
+                    <div style={{ flex: 1, minWidth: '300px', height: 300 }}>
+                      <h6 className="text-center">Bar Chart</h6>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="count" fill="#0d6efd" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* Pie Chart */}
+                    <div style={{ flex: 1, minWidth: '300px', height: 300 }}>
+                      <h6 className="text-center">Pie Chart</h6>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={chartData}
+                            dataKey="count"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            label
+                          >
+                            {chartData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={pieColors[index]} />
+                            ))}
+                          </Pie>
+                          <Legend />
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+
+                {/* Present Students Button */}
                 <button
                   className="btn btn-success mt-4"
                   onClick={fetchPresentStudents}
@@ -179,6 +237,7 @@ function TeacherDashboard() {
                   Show Present Students
                 </button>
 
+                {/* Present Students List */}
                 {showPresentList && (
                   <div className="mt-4">
                     <h5>Present Students:</h5>
@@ -203,6 +262,7 @@ function TeacherDashboard() {
           </>
         )}
 
+        {/* Profile Section */}
         {activeSection === 'profile' && (
           <div className="card" style={{ maxWidth: '600px' }}>
             <div className="card-header bg-primary text-white">
